@@ -1695,7 +1695,6 @@ class CloudPlayFragment : Fragment() {
                         }
 
                         else -> {
-                            updateGameStreamability(game, streamable = false)
                             showStreamingUnavailableErrorDialog(serviceType)
                         }
                     }
@@ -1739,7 +1738,6 @@ class CloudPlayFragment : Fragment() {
                     }
 
                     else -> {
-                        updateGameStreamability(game, streamable = false)
                         showStreamingUnavailableErrorDialog(serviceType)
                     }
                 }
