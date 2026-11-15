@@ -13,6 +13,9 @@
 - ⚙️ New settings (English + Italian): vibration on/off, intensity, DualSense mode, haptics on/off and gain
 - 🩹 The cloud library no longer marks a game with a red X after a generic network or session error
 
+![The new vibration settings on a Nintendo Switch OLED: controller vibration, intensity, DualSense mode, DualSense haptics to rumble and haptics gain](readme%20assets/HaptiCloudPad/impostazioni-vibrazione.png)
+<sub>The new settings, captured on the Switch OLED (Italian UI).</sub>
+
 Built and tested on a **Nintendo Switch OLED running Android (LineageOS)**, where the Joy-Cons now vibrate in
 PS5 Remote Play. Combined with the [joycond rumble fix](https://github.com/rikyroky91-commits/android-enhancement-nx)
 it gives working rumble on that console.
