@@ -1,3 +1,33 @@
+# 🎮 CloudPad + Controller Vibration (fork)
+
+> **This is an unofficial fork of [CloudPad](https://github.com/Chazq2023/CloudPad-Android) by Chazq2023** that adds
+> one thing: **controller vibration**. Sign-in, accounts and the connection to Sony's servers are untouched.
+> Everything below the line is the original README, including its account-risk warning, which applies here too.
+
+### What the patch adds
+- 📳 **Console rumble → your gamepad**: when the PlayStation asks for rumble, the controller you're playing with
+  vibrates (two motors: left = strong, right = weak), with an intensity setting and a 30-second safety stop
+- 🌊 **DualSense haptics → rumble** (optional *DualSense mode*, Remote Play to a PS5 only): CloudPad presents itself
+  as a DualSense, the PS5 streams its haptics as 16-bit stereo PCM at 3 kHz, and native C code reduces it to a 20 ms
+  RMS envelope per channel that drives ordinary rumble motors. Cloud sessions keep the original behaviour
+- ⚙️ New settings (English + Italian): vibration on/off, intensity, DualSense mode, haptics on/off and gain
+- 🩹 The cloud library no longer marks a game with a red X after a generic network or session error
+
+Built and tested on a **Nintendo Switch OLED running Android (LineageOS)**, where the Joy-Cons now vibrate in
+PS5 Remote Play. Combined with the [joycond rumble fix](https://github.com/rikyroky91-commits/switch-oled-android)
+it gives working rumble on that console.
+
+**Try it:** [download the APK](https://github.com/rikyroky91-commits/CloudPad-Android/releases/latest) (arm64).
+It is signed with a different key from the official build, so the official app must be uninstalled first
+(you'll need to sign in to PSN again). Code: branch [`joycon-rumble`](https://github.com/rikyroky91-commits/CloudPad-Android/compare/main...joycon-rumble).
+
+🇮🇹 *Fork di CloudPad che aggiunge la vibrazione del controller: rumble della console e aptica DualSense convertita
+in vibrazione (Remote Play su PS5). Provato sulla Switch OLED con Android: i Joy-Con vibrano.*
+
+Licence: AGPL-3.0, same as upstream. Not affiliated with Sony or with the CloudPad developer.
+
+---
+
 ![CloudPad Logo](cloudpad-logo.png)
 
 > [!WARNING]
