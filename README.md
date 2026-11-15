@@ -1,4 +1,4 @@
-# 🎮 CloudPad + Controller Vibration (fork)
+# 📳 HaptiCloudPad — CloudPad with controller vibration (fork)
 
 > **This is an unofficial fork of [CloudPad](https://github.com/Chazq2023/CloudPad-Android) by Chazq2023** that adds
 > one thing: **controller vibration**. Sign-in, accounts and the connection to Sony's servers are untouched.
@@ -14,12 +14,12 @@
 - 🩹 The cloud library no longer marks a game with a red X after a generic network or session error
 
 Built and tested on a **Nintendo Switch OLED running Android (LineageOS)**, where the Joy-Cons now vibrate in
-PS5 Remote Play. Combined with the [joycond rumble fix](https://github.com/rikyroky91-commits/switch-oled-android)
+PS5 Remote Play. Combined with the [joycond rumble fix](https://github.com/rikyroky91-commits/android-enhancement-nx)
 it gives working rumble on that console.
 
-**Try it:** [download the APK](https://github.com/rikyroky91-commits/CloudPad-Android/releases/latest) (arm64).
+**Try it:** [download the APK](https://github.com/rikyroky91-commits/hapticloudpad/releases/latest) (arm64).
 It is signed with a different key from the official build, so the official app must be uninstalled first
-(you'll need to sign in to PSN again). Code: branch [`joycon-rumble`](https://github.com/rikyroky91-commits/CloudPad-Android/compare/main...joycon-rumble).
+(you'll need to sign in to PSN again). Code: branch [`joycon-rumble`](https://github.com/rikyroky91-commits/hapticloudpad/compare/main...joycon-rumble).
 
 🇮🇹 *Fork di CloudPad che aggiunge la vibrazione del controller: rumble della console e aptica DualSense convertita
 in vibrazione (Remote Play su PS5). Provato sulla Switch OLED con Android: i Joy-Con vibrano.*
