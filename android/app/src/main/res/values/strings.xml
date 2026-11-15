@@ -279,6 +279,14 @@
     <string name="preferences_motion_enabled_summary">Use device\'s motion sensors for controller motion</string>
     <string name="preferences_button_haptic_enabled_title">Touch Haptics</string>
     <string name="preferences_button_haptic_enabled_summary">Vibrate the phone on touchscreen button presses</string>
+    <string name="preferences_rumble_enabled_title">Controller vibration</string>
+    <string name="preferences_rumble_enabled_summary">Play the console\'s rumble on the connected gamepad</string>
+    <string name="preferences_rumble_intensity_title">Vibration intensity (%)</string>
+    <string name="preferences_haptics_rumble_enabled_title">DualSense haptics → vibration</string>
+    <string name="preferences_haptics_rumble_enabled_summary">Turn PS5 haptic feedback into gamepad rumble (needs DualSense mode)</string>
+    <string name="preferences_haptics_rumble_gain_title">Haptics gain (%)</string>
+    <string name="preferences_dualsense_mode_title">DualSense mode (experimental)</string>
+    <string name="preferences_dualsense_mode_summary">Remote Play to a PS5 only: present the controller as a DualSense so the console sends haptics. Off = DualShock 4, the PS5 then sends ordinary rumble</string>
     <string name="preferences_category_title_cas_sharpening">CAS Image Sharpening</string>
     <string name="preferences_cas_sharpening_enabled_title">Enable CAS Image Sharpening</string>
     <string name="preferences_cas_sharpening_enabled_summary">Sharpens the stream image in real time using AMD FidelityFX Contrast Adaptive Sharpening</string>
@@ -641,6 +649,11 @@
     <string name="preferences_microphone_enabled_key">microphone_enabled</string>
     <string name="preferences_motion_enabled_key">motion_enabled</string>
     <string name="preferences_button_haptic_enabled_key">button_haptic_enabled</string>
+    <string name="preferences_rumble_enabled_key">rumble_enabled</string>
+    <string name="preferences_rumble_intensity_key">rumble_intensity</string>
+    <string name="preferences_haptics_rumble_enabled_key">haptics_rumble_enabled</string>
+    <string name="preferences_haptics_rumble_gain_key">haptics_rumble_gain</string>
+    <string name="preferences_dualsense_mode_key">dualsense_mode</string>
     <string name="preferences_log_verbose_key">log_verbose</string>
     <string name="preferences_import_settings_key">import_settings</string>
     <string name="preferences_export_settings_key">export_settings</string>

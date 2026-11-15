@@ -311,6 +311,34 @@ class Preferences(context: Context)
 		get() = sharedPreferences.getBoolean(clearVoiceEnabledKey, false)
 		set(value) { sharedPreferences.edit().putBoolean(clearVoiceEnabledKey, value).apply() }
 
+	// ---- CloudPad vibration patch ----
+	val rumbleEnabledKey get() = resources.getString(R.string.preferences_rumble_enabled_key)
+	var rumbleEnabled
+		get() = sharedPreferences.getBoolean(rumbleEnabledKey, true)
+		set(value) { sharedPreferences.edit().putBoolean(rumbleEnabledKey, value).apply() }
+
+	/** Percent, 10..200 (SeekBarPreference stores an Int). */
+	val rumbleIntensityKey get() = resources.getString(R.string.preferences_rumble_intensity_key)
+	var rumbleIntensity: Int
+		get() = (try { sharedPreferences.getInt(rumbleIntensityKey, 100) } catch(e: ClassCastException) { 100 }).coerceIn(10, 200)
+		set(value) { sharedPreferences.edit().putInt(rumbleIntensityKey, value).apply() }
+
+	val hapticsRumbleEnabledKey get() = resources.getString(R.string.preferences_haptics_rumble_enabled_key)
+	var hapticsRumbleEnabled
+		get() = sharedPreferences.getBoolean(hapticsRumbleEnabledKey, true)
+		set(value) { sharedPreferences.edit().putBoolean(hapticsRumbleEnabledKey, value).apply() }
+
+	/** Percent, 25..400. */
+	val hapticsRumbleGainKey get() = resources.getString(R.string.preferences_haptics_rumble_gain_key)
+	var hapticsRumbleGain: Int
+		get() = (try { sharedPreferences.getInt(hapticsRumbleGainKey, 100) } catch(e: ClassCastException) { 100 }).coerceIn(25, 400)
+		set(value) { sharedPreferences.edit().putInt(hapticsRumbleGainKey, value).apply() }
+
+	val dualsenseModeKey get() = resources.getString(R.string.preferences_dualsense_mode_key)
+	var dualsenseMode
+		get() = sharedPreferences.getBoolean(dualsenseModeKey, false)
+		set(value) { sharedPreferences.edit().putBoolean(dualsenseModeKey, value).apply() }
+
 	val casSharpeningEnabledKey get() = resources.getString(R.string.preferences_cas_sharpening_enabled_key)
 	var casSharpeningEnabled
 		get() = sharedPreferences.getBoolean(casSharpeningEnabledKey, false)

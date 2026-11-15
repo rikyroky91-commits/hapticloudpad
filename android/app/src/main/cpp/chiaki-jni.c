@@ -32,6 +32,7 @@
 #include "chiaki-jni.h"
 
 #include <time.h>
+#include <math.h>
 
 static char *strdup_jni(const char *str)
 {
@@ -324,6 +325,17 @@ typedef struct android_chiaki_session_t
 	bool use_opus_decoder; // true for PSCloud, false for PSNow/Remote Play
 	void *audio_output;
 	ChiakiOpusEncoder opus_encoder; // mic input: encodes captured PCM to Opus and sends it to the console
+
+	// DualSense haptics -> rumble (only when the session announced a DualSense, see sessionCreate).
+	// The console sends haptics as 16-bit stereo PCM at 3000 Hz; it is reduced to a short-window
+	// envelope per channel and handed to Java as left/right rumble amplitudes (0..255).
+	jmethodID java_session_event_haptic_rumble_meth;
+	double haptics_sum_l, haptics_sum_r;
+	double haptics_sum_sq_l, haptics_sum_sq_r;
+	size_t haptics_window_frames;
+	int haptics_last_l, haptics_last_r;
+	uint64_t haptics_last_send_ms;
+	bool haptics_first_frame_logged;
 } AndroidChiakiSession;
 
 static uint64_t android_chiaki_now_ms()
@@ -433,6 +445,95 @@ static void android_chiaki_event_cb(ChiakiEvent *event, void *user)
 			break;
 	}
 
+	(*global_vm)->DetachCurrentThread(global_vm);
+}
+
+// ---- DualSense haptics -> rumble ----
+// 60 stereo frames at 3000 Hz = 20 ms per envelope window (about 50 updates/s at most).
+#define HAPTICS_RUMBLE_WINDOW_FRAMES 60
+// Envelope below this (fraction of full scale) is treated as silence.
+#define HAPTICS_RUMBLE_THRESHOLD 0.01f
+// Only report a change of at least this many steps (of 255), to keep the input path quiet.
+#define HAPTICS_RUMBLE_MIN_DELTA 6
+// While vibrating, repeat the current value at least this often so Java knows the stream is alive.
+#define HAPTICS_RUMBLE_HEARTBEAT_MS 100
+
+static int android_chiaki_haptics_level_to_amp(double sum, double sum_sq, size_t n)
+{
+	if(n == 0)
+		return 0;
+	double mean = sum / (double)n;
+	double var = sum_sq / (double)n - mean * mean; // DC offset removed
+	if(var <= 0.0)
+		return 0;
+	// RMS * sqrt(2) ~ peak of a sine; normalised to 0..1
+	float level = (float)(sqrt(var) * 1.41421356 / 32767.0);
+	if(level < HAPTICS_RUMBLE_THRESHOLD)
+		return 0;
+	if(level > 1.0f)
+		level = 1.0f;
+	// sqrt curve: subtle haptics still reach a perceptible rumble, strong ones saturate
+	int amp = (int)(sqrtf(level) * 255.0f + 0.5f);
+	return amp > 255 ? 255 : (amp < 1 ? 1 : amp);
+}
+
+static void android_chiaki_haptics_frame_cb(uint8_t *buf, size_t buf_size, void *user)
+{
+	AndroidChiakiSession *session = user;
+	if(!session || !buf || !session->java_session_event_haptic_rumble_meth)
+		return;
+
+	if(!session->haptics_first_frame_logged)
+	{
+		session->haptics_first_frame_logged = true;
+		CHIAKI_LOGW(session->log, "JNI: first haptics frame received, size=%zu", buf_size);
+	}
+
+	size_t frames = buf_size / 4; // 2 channels * int16
+	for(size_t i = 0; i < frames; i++)
+	{
+		int16_t l = (int16_t)((uint16_t)buf[i * 4] | ((uint16_t)buf[i * 4 + 1] << 8));
+		int16_t r = (int16_t)((uint16_t)buf[i * 4 + 2] | ((uint16_t)buf[i * 4 + 3] << 8));
+		session->haptics_sum_l += l;
+		session->haptics_sum_r += r;
+		session->haptics_sum_sq_l += (double)l * (double)l;
+		session->haptics_sum_sq_r += (double)r * (double)r;
+		session->haptics_window_frames++;
+	}
+
+	if(session->haptics_window_frames < HAPTICS_RUMBLE_WINDOW_FRAMES)
+		return;
+
+	int amp_l = android_chiaki_haptics_level_to_amp(session->haptics_sum_l, session->haptics_sum_sq_l, session->haptics_window_frames);
+	int amp_r = android_chiaki_haptics_level_to_amp(session->haptics_sum_r, session->haptics_sum_sq_r, session->haptics_window_frames);
+	session->haptics_sum_l = session->haptics_sum_r = 0.0;
+	session->haptics_sum_sq_l = session->haptics_sum_sq_r = 0.0;
+	session->haptics_window_frames = 0;
+
+	uint64_t now = android_chiaki_now_ms();
+	bool zero_now = amp_l == 0 && amp_r == 0;
+	bool zero_before = session->haptics_last_l == 0 && session->haptics_last_r == 0;
+	bool send = false;
+	if(zero_now != zero_before)
+		send = true;
+	else if(!zero_now)
+	{
+		if(abs(amp_l - session->haptics_last_l) >= HAPTICS_RUMBLE_MIN_DELTA
+				|| abs(amp_r - session->haptics_last_r) >= HAPTICS_RUMBLE_MIN_DELTA
+				|| now - session->haptics_last_send_ms >= HAPTICS_RUMBLE_HEARTBEAT_MS)
+			send = true;
+	}
+	if(!send)
+		return;
+
+	session->haptics_last_l = amp_l;
+	session->haptics_last_r = amp_r;
+	session->haptics_last_send_ms = now;
+
+	JNIEnv *env = attach_thread_jni();
+	if(!env)
+		return;
+	E->CallVoidMethod(env, session->java_session, session->java_session_event_haptic_rumble_meth, (jint)amp_l, (jint)amp_r);
 	(*global_vm)->DetachCurrentThread(global_vm);
 }
 
@@ -637,6 +738,14 @@ JNIEXPORT void JNICALL JNI_FCN(sessionCreate)(JNIEnv *env, jobject obj, jobject 
 
 	connect_info.cloud_port = (uint16_t)E->GetIntField(env, connect_info_obj, E->GetFieldID(env, connect_info_class, "cloudPort", "I"));
 	connect_info.cloud_psn_wrapper_type = (uint8_t)E->GetIntField(env, connect_info_obj, E->GetFieldID(env, connect_info_class, "cloudPsnWrapperType", "I"));
+
+	// Optional "DualSense mode" (CloudPad vibration patch): announce a DualSense instead of a
+	// DualShock 4 so a PS5 sends its haptics stream (converted to rumble below). Remote Play to a
+	// PS5 only; cloud sessions always keep the original behaviour.
+	jboolean enable_dualsense = E->GetBooleanField(env, connect_info_obj, E->GetFieldID(env, connect_info_class, "enableDualsense", "Z"));
+	connect_info.enable_dualsense = enable_dualsense && connect_info.ps5
+		&& connect_info.service_type == CHIAKI_SERVICE_TYPE_REMOTE_PLAY;
+	CHIAKI_LOGI(log, "[ANDROID JNI] enable_dualsense=%d (requested %d)", (int)connect_info.enable_dualsense, (int)enable_dualsense);
 	connect_info.cloud_mtu_in = (uint32_t)E->GetIntField(env, connect_info_obj, E->GetFieldID(env, connect_info_class, "cloudMtuIn", "I"));
 	connect_info.cloud_mtu_out = (uint32_t)E->GetIntField(env, connect_info_obj, E->GetFieldID(env, connect_info_class, "cloudMtuOut", "I"));
 	connect_info.cloud_rtt_us = (uint64_t)E->GetLongField(env, connect_info_obj, E->GetFieldID(env, connect_info_class, "cloudRttUs", "J"));
@@ -809,6 +918,26 @@ JNIEXPORT void JNICALL JNI_FCN(sessionCreate)(JNIEnv *env, jobject obj, jobject 
 	else
 		android_chiaki_audio_decoder_get_sink(&session->audio_decoder, &audio_sink);
 	chiaki_session_set_audio_sink(&session->session, &audio_sink);
+
+	// Haptics only arrive when a DualSense was announced; install the sink only then.
+	if(connect_info.enable_dualsense)
+	{
+		session->java_session_event_haptic_rumble_meth = E->GetMethodID(env, session->java_session_class, "eventHapticRumble", "(II)V");
+		if(E->ExceptionCheck(env))
+		{
+			E->ExceptionClear(env);
+			session->java_session_event_haptic_rumble_meth = NULL;
+		}
+		if(session->java_session_event_haptic_rumble_meth)
+		{
+			ChiakiAudioSink haptics_sink = { 0 };
+			haptics_sink.user = session;
+			haptics_sink.header_cb = NULL;
+			haptics_sink.frame_cb = android_chiaki_haptics_frame_cb;
+			chiaki_session_set_haptics_sink(&session->session, &haptics_sink);
+			CHIAKI_LOGI(log, "JNI: DualSense haptics -> rumble sink installed");
+		}
+	}
 
 beach:
 	if(!session && log)

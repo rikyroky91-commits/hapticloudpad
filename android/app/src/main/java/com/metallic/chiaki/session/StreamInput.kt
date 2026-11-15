@@ -25,6 +25,21 @@ class StreamInput(
 ) {
 	var controllerStateChangedCallback: ((ControllerState) -> Unit)? = null
 
+	/** Id of the physical gamepad that last sent a button or stick event, or -1 — the device
+	 *  RumbleController vibrates (CloudPad vibration patch). */
+	@Volatile var lastGamepadDeviceId: Int = -1
+		private set
+
+	private fun noteGamepad(device: InputDevice?)
+	{
+		if(device == null || device.isVirtual)
+			return
+		val sources = device.sources
+		if((sources and InputDevice.SOURCE_GAMEPAD) == InputDevice.SOURCE_GAMEPAD ||
+			(sources and InputDevice.SOURCE_JOYSTICK) == InputDevice.SOURCE_JOYSTICK)
+			lastGamepadDeviceId = device.id
+	}
+
 	/** Fired on a press of whatever is mapped to [ControllerAction.OPEN_QUICK_SETTINGS] — see
 	 *  that action's own doc comment. Set by StreamActivity to toggle its Quick Settings panel. */
 	var onOpenQuickSettings: (() -> Unit)? = null
@@ -546,6 +561,7 @@ class StreamInput(
 
 	fun dispatchKeyEvent(event: KeyEvent): Boolean
 	{
+		noteGamepad(event.device)
 		if(event.action != KeyEvent.ACTION_DOWN && event.action != KeyEvent.ACTION_UP) return false
 		if(event.action == KeyEvent.ACTION_DOWN && event.repeatCount > 0)
 			return event.keyCode in comboModifierKeyCodes || event.keyCode in singleKeyToActions
@@ -642,6 +658,7 @@ class StreamInput(
 	{
 		if(event.source and InputDevice.SOURCE_CLASS_JOYSTICK != InputDevice.SOURCE_CLASS_JOYSTICK)
 			return false
+		noteGamepad(event.device)
 
 		fun Float.signedAxis() = (this * Short.MAX_VALUE).toInt().toShort()
 		fun Float.unsignedAxis() = (this * UByte.MAX_VALUE.toFloat()).toUInt().toUByte()

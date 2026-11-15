@@ -62,6 +62,9 @@ class DataStore(val preferences: Preferences): PreferenceDataStore()
 		preferences.pipEnabledKey -> preferences.pipEnabled
 		preferences.audioBoostEnabledKey -> preferences.audioBoostEnabled
 		preferences.clearVoiceEnabledKey -> preferences.clearVoiceEnabled
+		preferences.rumbleEnabledKey -> preferences.rumbleEnabled
+		preferences.hapticsRumbleEnabledKey -> preferences.hapticsRumbleEnabled
+		preferences.dualsenseModeKey -> preferences.dualsenseMode
 		preferences.casSharpeningEnabledKey -> preferences.casSharpeningEnabled
 		preferences.fsrEnabledKey -> preferences.fsrEnabled
 		preferences.fsrUpscalingEnabledKey -> preferences.fsrUpscalingEnabled
@@ -81,6 +84,9 @@ class DataStore(val preferences: Preferences): PreferenceDataStore()
 			preferences.pipEnabledKey -> preferences.pipEnabled = value
 			preferences.audioBoostEnabledKey -> preferences.audioBoostEnabled = value
 			preferences.clearVoiceEnabledKey -> preferences.clearVoiceEnabled = value
+			preferences.rumbleEnabledKey -> preferences.rumbleEnabled = value
+			preferences.hapticsRumbleEnabledKey -> preferences.hapticsRumbleEnabled = value
+			preferences.dualsenseModeKey -> preferences.dualsenseMode = value
 			preferences.casSharpeningEnabledKey -> preferences.casSharpeningEnabled = value
 			preferences.fsrEnabledKey -> preferences.fsrEnabled = value
 			preferences.fsrUpscalingEnabledKey -> preferences.fsrUpscalingEnabled = value
@@ -155,6 +161,8 @@ class DataStore(val preferences: Preferences): PreferenceDataStore()
 		preferences.cloudBitratePsnowKey -> preferences.getCloudBitratePsnow() / 1000
 		preferences.casSharpeningLevelKey -> preferences.casSharpeningLevel
 		preferences.fsrSharpeningKey -> preferences.fsrSharpening
+		preferences.rumbleIntensityKey -> preferences.rumbleIntensity
+		preferences.hapticsRumbleGainKey -> preferences.hapticsRumbleGain
 		else -> defValue
 	}
 
@@ -164,6 +172,8 @@ class DataStore(val preferences: Preferences): PreferenceDataStore()
 			preferences.cloudBitratePsnowKey -> preferences.setCloudBitratePsnow(value * 1000)
 			preferences.casSharpeningLevelKey -> preferences.casSharpeningLevel = value
 			preferences.fsrSharpeningKey -> preferences.fsrSharpening = value
+			preferences.rumbleIntensityKey -> preferences.rumbleIntensity = value
+			preferences.hapticsRumbleGainKey -> preferences.hapticsRumbleGain = value
 		}
 	}
 }

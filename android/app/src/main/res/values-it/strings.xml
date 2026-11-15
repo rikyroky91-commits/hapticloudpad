@@ -157,6 +157,14 @@
     <string name="preferences_motion_enabled_summary">Usa i sensori di movimento del dispositivo per i comandi di movimento del controller</string>
     <string name="preferences_button_haptic_enabled_title">Feedback aptico touch</string>
     <string name="preferences_button_haptic_enabled_summary">Fa vibrare il telefono alla pressione dei pulsanti sullo schermo touch</string>
+    <string name="preferences_rumble_enabled_title">Vibrazione controller</string>
+    <string name="preferences_rumble_enabled_summary">Riproduce la vibrazione della console sul controller collegato</string>
+    <string name="preferences_rumble_intensity_title">Intensità vibrazione (%)</string>
+    <string name="preferences_haptics_rumble_enabled_title">Aptica DualSense → vibrazione</string>
+    <string name="preferences_haptics_rumble_enabled_summary">Trasforma il feedback aptico della PS5 in vibrazione del controller (richiede la modalità DualSense)</string>
+    <string name="preferences_haptics_rumble_gain_title">Guadagno aptica (%)</string>
+    <string name="preferences_dualsense_mode_title">Modalità DualSense (sperimentale)</string>
+    <string name="preferences_dualsense_mode_summary">Solo Remote Play su PS5: presenta il controller come DualSense, così la console invia l\'aptica. Spenta = DualShock 4, e la PS5 invia la vibrazione normale</string>
     <string name="preferences_category_title_cas_sharpening">Nitidezza immagine CAS</string>
     <string name="preferences_cas_sharpening_enabled_title">Attiva nitidezza immagine CAS</string>
     <string name="preferences_cas_sharpening_enabled_summary">Rende più nitida l\'immagine dello stream in tempo reale usando AMD FidelityFX Contrast Adaptive Sharpening</string>

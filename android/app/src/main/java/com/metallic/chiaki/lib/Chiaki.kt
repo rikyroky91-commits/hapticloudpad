@@ -109,7 +109,11 @@ data class ConnectInfo(
 	val psnToken: String? = null,
 	val psnAccountId: String? = null, // base64-encoded 8-byte account ID
 	val holepunchSessionPtr: Long = 0L,
-	val autoRegist: Boolean = false // true for PSN auto-registration via holepunch
+	val autoRegist: Boolean = false, // true for PSN auto-registration via holepunch
+	// CloudPad vibration patch: announce a DualSense instead of a DualShock 4 (Remote Play to a
+	// PS5 only — native code ignores it for every other session type) so the console sends its
+	// haptics stream, which native code turns into rumble. Read by native code by this exact name.
+	val enableDualsense: Boolean = false
 ): Parcelable
 
 /** Which of the three session flows a [ConnectInfo] represents. There's no explicit flag for
@@ -547,6 +551,8 @@ object ConnectedEvent: Event()
 data class LoginPinRequestEvent(val pinIncorrect: Boolean): Event()
 data class QuitEvent(val reason: QuitReason, val reasonString: String?): Event()
 data class RumbleEvent(val left: UByte, val right: UByte): Event()
+/** DualSense haptics converted to rumble amplitudes (0..255) by native code. */
+data class HapticRumbleEvent(val left: Int, val right: Int): Event()
 data class AutoRegistEvent(val host: RegistHost): Event()
 object HolepunchEvent: Event()
 
@@ -607,6 +613,11 @@ class Session(connectInfo: ConnectInfo, logFile: String?, logVerbose: Boolean)
 	private fun eventRumble(left: Int, right: Int)
 	{
 		event(RumbleEvent(left.toUByte(), right.toUByte()))
+	}
+
+	private fun eventHapticRumble(left: Int, right: Int)
+	{
+		event(HapticRumbleEvent(left, right))
 	}
 
 	private fun eventRegist(host: RegistHost)

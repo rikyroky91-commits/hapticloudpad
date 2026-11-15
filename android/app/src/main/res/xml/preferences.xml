@@ -92,6 +92,50 @@
             app:icon="@drawable/ic_button_haptic" />
 
         <SwitchPreference
+            app:key="@string/preferences_rumble_enabled_key"
+            app:title="@string/preferences_rumble_enabled_title"
+            app:summary="@string/preferences_rumble_enabled_summary"
+            app:defaultValue="true"
+            app:icon="@drawable/ic_gamepad" />
+
+        <SeekBarPreference
+            app:key="@string/preferences_rumble_intensity_key"
+            app:title="@string/preferences_rumble_intensity_title"
+            app:dependency="@string/preferences_rumble_enabled_key"
+            app:min="10"
+            android:max="200"
+            app:seekBarIncrement="10"
+            app:defaultValue="100"
+            app:showSeekBarValue="true"
+            app:icon="@drawable/ic_gamepad" />
+
+        <SwitchPreference
+            app:key="@string/preferences_dualsense_mode_key"
+            app:title="@string/preferences_dualsense_mode_title"
+            app:summary="@string/preferences_dualsense_mode_summary"
+            app:defaultValue="false"
+            app:icon="@drawable/ic_gamepad" />
+
+        <SwitchPreference
+            app:key="@string/preferences_haptics_rumble_enabled_key"
+            app:title="@string/preferences_haptics_rumble_enabled_title"
+            app:summary="@string/preferences_haptics_rumble_enabled_summary"
+            app:dependency="@string/preferences_rumble_enabled_key"
+            app:defaultValue="true"
+            app:icon="@drawable/ic_button_haptic" />
+
+        <SeekBarPreference
+            app:key="@string/preferences_haptics_rumble_gain_key"
+            app:title="@string/preferences_haptics_rumble_gain_title"
+            app:dependency="@string/preferences_haptics_rumble_enabled_key"
+            app:min="25"
+            android:max="400"
+            app:seekBarIncrement="25"
+            app:defaultValue="100"
+            app:showSeekBarValue="true"
+            app:icon="@drawable/ic_button_haptic" />
+
+        <SwitchPreference
             app:key="@string/preferences_pip_enabled_key"
             app:title="@string/preferences_pip_enabled_title"
             app:summary="@string/preferences_pip_enabled_summary"

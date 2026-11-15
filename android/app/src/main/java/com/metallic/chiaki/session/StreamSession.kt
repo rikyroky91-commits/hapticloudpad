@@ -76,6 +76,9 @@ class StreamSession(connectInfo: ConnectInfo, val logManager: LogManager, val lo
 		setClearVoice(input.preferences.clearVoiceEnabled)
 	}
 
+	/** Console rumble / DualSense haptics -> vibration of the active gamepad (CloudPad patch). */
+	private val rumble = RumbleController(input.preferences) { input.lastGamepadDeviceId }
+
 	private val _state = MutableLiveData<StreamState>(StreamStateIdle)
 	val state: LiveData<StreamState> get() = _state
 
@@ -177,6 +180,7 @@ class StreamSession(connectInfo: ConnectInfo, val logManager: LogManager, val lo
 	{
 		backgroundDrainSurface?.release()
 		backgroundDrainSurface = null
+		rumble.release()
 	}
 
 	// ---- Microphone (Remote Play only) ----
@@ -387,6 +391,7 @@ class StreamSession(connectInfo: ConnectInfo, val logManager: LogManager, val lo
 	fun shutdown(onFullyStopped: (() -> Unit)? = null)
 	{
 		Log.i("StreamSession", "shutdown: session=${session != null}")
+		rumble.stop()
 		releaseWifiLock()
 		connectGeneration++
 		// Mic capture thread must be fully joined before the native session pointer can be
@@ -487,6 +492,10 @@ class StreamSession(connectInfo: ConnectInfo, val logManager: LogManager, val lo
 		// Picked up here rather than at every ConnectInfo build site so every connect path (Remote
 		// Play, PSN holepunch, cloud, Quick Settings restarts) uses the current setting.
 		connectInfo = connectInfo.copy(packetLossMax = input.preferences.congestionMode.packetLossMax)
+		// DualSense mode: native code only honours it for Remote Play to a PS5.
+		connectInfo = connectInfo.copy(enableDualsense = input.preferences.dualsenseMode
+			&& connectInfo.ps5 && connectInfo.sessionType == StreamSessionType.REMOTE_PLAY)
+		rumble.reloadPreferences()
 
 		val duid = connectInfo.duid
 		val hasPsnToken = !connectInfo.psnToken.isNullOrEmpty()
@@ -688,6 +697,22 @@ class StreamSession(connectInfo: ConnectInfo, val logManager: LogManager, val lo
 
 	private fun eventCallback(event: Event)
 	{
+		// Rumble events can arrive many times per second: handle them before the generic log line.
+		when(event)
+		{
+			is RumbleEvent -> {
+				// Ignore late events from a session that is being replaced or torn down.
+				if(sessionConnected)
+					rumble.onLegacyRumble(event.left.toInt(), event.right.toInt())
+				return
+			}
+			is HapticRumbleEvent -> {
+				if(sessionConnected)
+					rumble.onHapticRumble(event.left, event.right)
+				return
+			}
+			else -> {}
+		}
 		Log.i("StreamSession", "eventCallback: ${event.javaClass.simpleName}")
 		when(event)
 		{
@@ -701,6 +726,7 @@ class StreamSession(connectInfo: ConnectInfo, val logManager: LogManager, val lo
 			is QuitEvent -> {
 				Log.i("StreamSession", "EVENT: Quit reason=${event.reason} str=${event.reasonString}")
 				_state.postValue(StreamStateQuit(event.reason, event.reasonString))
+				rumble.stop()
 				// The connection is gone, so stop holding the radio awake now rather than for as
 				// long as the error dialog stays up (shutdown() would otherwise be the first to
 				// release it). Only if the session that quit is still the current one — the
@@ -716,7 +742,7 @@ class StreamSession(connectInfo: ConnectInfo, val logManager: LogManager, val lo
 				Log.i("StreamSession", "EVENT: LoginPinRequest pinIncorrect=${event.pinIncorrect}")
 				_state.postValue(StreamStateLoginPinRequest(event.pinIncorrect))
 			}
-			is RumbleEvent -> { }
+			is RumbleEvent, is HapticRumbleEvent -> { }
 			is AutoRegistEvent -> Log.i("StreamSession", "EVENT: AutoRegist host=${event.host.serverNickname}")
 			is HolepunchEvent -> Log.i("StreamSession", "EVENT: Holepunch")
 		}
